@@ -1,15 +1,15 @@
 import time
 import grovepi
 import RPi.GPIO as GPIO
-grovepi.pinMode(6,"OUTPUT")
-grovepi.pinMode(7,"OUTPUT")
-grovepi.pinMode(8,"OUTPUT")
-grovepi.pinMode(9,"OUTPUT")
+grovepi.pinMode(6,"OUTPUT") #led 1 R
+grovepi.pinMode(7,"OUTPUT") #led 2 R
+grovepi.pinMode(8,"OUTPUT") #led 3 R
+grovepi.pinMode(9,"OUTPUT") #led 3 G
 
-grovepi.pinMode(14,"OUTPUT")
-grovepi.pinMode(15,"OUTPUT")
-grovepi.pinMode(16,"OUTPUT")
-grovepi.pinMode(17,"OUTPUT")
+grovepi.pinMode(14,"OUTPUT") #led 1 G
+grovepi.pinMode(15,"OUTPUT") #led 2 G
+grovepi.pinMode(16,"OUTPUT") #led 4 R
+grovepi.pinMode(17,"OUTPUT") #led 4 G
 
 grovepi.pinMode(2,"INPUT")
 grovepi.pinMode(3,"INPUT")
