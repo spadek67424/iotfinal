@@ -1,7 +1,7 @@
 
 # coding: utf-8
 
-# In[118]:
+# In[98]:
 
 import numpy as np
 import time
@@ -17,9 +17,8 @@ class kernel:
         self.totalIncome = 0
         self.mainPriority = 0 # lowest (vacant parking space)
         self.mainBias = 0 # 1 if other space have higher priority
-        self.foreignPriority = 0 # record foreign Priority
-        # self.foreign_vehicle_num = 0
-
+        self.foreignPriority = 0
+        
         # custom variable
         self.timeInterval = timeInterval
         self.carspaceNum = carspaceNum
@@ -84,16 +83,49 @@ class kernel:
         # self.broadcast_Pi_priorty()    
     
     def ParkVehicle(self,space_index, vehicle):
-        self.mark_parkingstarttime_list(space_index, vehicle)
-        self.mark_parking_list(space_index, vehicle)
-        self.mark_vehicleLabel_list(space_index, vehicle)
-        self.updateLists(space_index)
+        if self.parkingVerification(space_index, vehicle):
+            self.mark_parkingstarttime_list(space_index, vehicle)
+            self.mark_parking_list(space_index, vehicle)
+            self.mark_vehicleLabel_list(space_index, vehicle)
+            self.updateLists(space_index)
+            self.show_parkInfo(space_index, vehicle)
+        
+            self.show_priceInfo() # check prices when update
+
+    def LeaveVehicle(self, space_index):
+        # update income and refresh time first
+        # then unmark parking info
+        # finally update corresponding lists and variables
+        
+        if self.leaveVerification(space_index):
+            self.unmark_parkingleavetime_list(space_index)
+            self.unmark_parking_list(space_index)
+            self.unmark_vehicleLabel_list(space_index)
+            self.updateLists(space_index)
+
+            self.show_priceInfo() # check prices when update
     
-    def LeaveVehicle(self, space_index):        
-        self.unmark_parkingleavetime_list(space_index)
-        self.unmark_parking_list(space_index)
-        self.unmark_vehicleLabel_list(space_index)
-        self.updateLists(space_index)
+    def parkingVerification(self, space_idx, vehicle):
+        legal = True
+        if vehicle==1:
+            for idx in range(self.carspaceNum):
+                if self.parking_list[space_idx+idx]==1:
+                    legal=False
+                    break
+        elif self.parking_list[space_idx]==1: # scooter and the parking space already held
+            legal = False
+        
+        # print error msg if illegal
+        if not legal:
+            print("parkingRequest is illegal ! "+str(space_idx)+' space has already been parked')
+        return legal
+    
+    def leaveVerification(self, space_idx):
+        legal = True
+        if not self.parking_list[space_idx]==1:
+            legal = False
+            print("leaveRequest is illegal ! "+str(space_idx)+' space has already been vacant')
+        return legal
         
     ################# update main func ######################
     def updateLists(self, space_idx):
@@ -101,7 +133,6 @@ class kernel:
             self.update_distance_list()
             self.update_nearestVehicleIdx_list()
             self.update_priority_list()
-            self.update_mainPriority()
             self.update_price_list()
 
     ################## mark func. #######################
@@ -153,8 +184,9 @@ class kernel:
         vehicle = self.vehicleLabel_list[space_idx]
         
         # get income updated
-        self.update_totalIncome(starttime, leavetime, price)
-
+        income = self.update_totalIncome(starttime, leavetime, price)
+        self.show_leaveInfo(space_idx, income)
+        
         if vehicle==1:
             for idx in range(self.carspaceNum):
                 self.parkingstarttime_list[space_idx+idx]=0
@@ -278,7 +310,7 @@ class kernel:
                 self.price_list[idx] = self.basePrice + self.priority_list[idx] + bias - self.mainPriority
         
     #####################################################
-
+    
     def update_from_broadcast(self, foreignPriority, foreign_vehicle_num): 
         # vehicle_num = sum(self.parking_list):
         if self.mainPriority < self.foreignPriority :# or (self.foreignPriority==self.mainPriority and vehicle_num > self.foreign_vehicle_num):
@@ -301,28 +333,12 @@ class kernel:
     
     def update_totalIncome(self, starttime, leavetime, price):
         times = int((leavetime - starttime)/self.timeInterval) + 1
-        self.totalIncome += (times * price)
-        
+        income = times * price
+        self.totalIncome += income
+        return income
+    
     #####################################################
     def showLists(self):
-        
-        # python2
-
-        # print "parking list : "
-        # print self.parking_list
-        # print "distance_list : "
-        # print self.distance_list 
-        # print "nearestVehicleIdx_list : "
-        # print self.nearestVehicleIdx_list
-        # print "priority list : "
-        # print self.priority_list
-        # print "price list : "
-        # print self.price_list
-        # print "vehicleLabel list" 
-        # print self.vehicleLabel_list 
-        # print "parkingstarttime list" 
-        # print [int(time.time()-t) if t>0 else 0 for t in self.parkingstarttime_list]
-
         print("parking list : ")
         print(self.parking_list)
         print("distance_list : ")
@@ -339,19 +355,23 @@ class kernel:
         print([int(time.time()-t) if t>0 else 0 for t in self.parkingstarttime_list])
     
     def showStatus(self):
-        
-        # python 2
-        
-        # print "mainPriority"
-        # print self.mainPriority
-        # print "mainBias"
-        # print self.mainBias
-        # print "totalIncome"
-        # print self.totalIncome
-
         print("mainPriority")
         print(self.mainPriority)
         print("mainBias")
         print(self.mainBias)
         print("totalIncome")
         print(self.totalIncome)
+    
+    def show_priceInfo(self):
+        print('price list : ' + str(self.price_list))
+        
+    def show_parkInfo(self, space_idx, vehicle):
+        vehicle = 'car' if vehicle else 'scooter'
+        print('[park vehicle] class: '+ vehicle +' | idx: ' + str(space_idx))
+        
+    def show_leaveInfo(self, space_idx, income):
+        vehicle = self.vehicleLabel_list[space_idx] # get vehicle class
+        vehicle = 'car' if vehicle else 'scooter'
+        print('[leave vehicle] class: '+vehicle+' | idx: '+str(space_idx)+' | earned: '+str(income))
+
+

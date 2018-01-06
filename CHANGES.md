@@ -1,3 +1,11 @@
+> Jan 07, 2018
+
+1. add functions to **kernel.py** :
+	- _parkingVerification(space_idx, vehicle)_ : check if the parking request is legal or not. Print error message and then reject if the request is illegal.
+	- _show_priceInfo_ : print each parking space's price whether it has been parked or not
+	- _show_parkInfo(space_idx, vehicle)_ : print parking info. when parking request comes and accepted . (inside func:_ParkVehicle_)
+	- _show_leaveInfo(space_idx, income)_ : print leaving info. when vehicle leaves . (inside func:_unmark_parkingleavetime_list_)
+
 > Jan 06, 2018
 
 1. modify **udpdevice_mag_strip.py** :
