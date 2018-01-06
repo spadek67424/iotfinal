@@ -16,6 +16,17 @@ stirp_num = 4
 if __name__ == "__main__":
     Kernel = kernel(block_num = strip_num)
     strip_status_list = [False] * 4
+    def updateKernel(pID, val):
+        # event trigger
+        if strip_status_list[pID] != val:
+            if val:
+                Kernel.ParkVehicle(pID, 0) # scooter
+                
+            else:
+                Kernel.LeaveVehicle(pID, 0) # scooter
+            strip_status_list[pID] = val
+            Kernel.showLists()
+            time.sleep(0.05)
 
     class Magnetic_Sensor(WuClass):
 
@@ -32,16 +43,7 @@ if __name__ == "__main__":
                 obj.setProperty(0, on_off)
 
                 # print "Magnetic sensor value: ", on_off
-                # event trigger
-                if strip_status_list[pID] != val:
-                    if val:
-                        Kernel.ParkVehicle(pID, 0) # scooter
-                        
-                    else:
-                        Kernel.LeaveVehicle(pID, 0) # scooter
-                    strip_status_list[pID] = val
-                    Kernel.showLists()
-                time.sleep(0.05)
+                updateKernel(pID, val)
 
             except IOError:
                 print ("Error")
