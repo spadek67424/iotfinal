@@ -8,34 +8,37 @@ import time
 
 class kernel:
     def __init__(self, block_num=8, # theres <block_num> parking space a side (kernel)
-                 basePrice=40, # at least <basePrice> dollar a timeInterval
+                 basePrice=10, # at least <basePrice> dollar a timeInterval
                  carspaceNum=4, # a car space equals to <carspaceNum> scooters space
-                 timeInterval=60 # 1 min
+                 timeInterval=60, # 1 min
+                 carPrice=50,
                 ):
         
         # variable
         self.totalIncome = 0
         self.mainPriority = 0 # lowest (vacant parking space)
         self.mainBias = 0 # 1 if other space have higher priority
-        self.foreignPriority = 0
-        
+
         # custom variable
         self.timeInterval = timeInterval
         self.carspaceNum = carspaceNum
         self.space_num = block_num
         self.basePrice = basePrice
         self.parkingPriority = block_num + 2 # parking vehicle
+        self.carPrice = carPrice
 
         # list
+        self.basicPriority_list = np.array([1,2,3,4,4,3,2,1])
         self.price_list = np.array([0]*block_num)
-        self.priority_list = np.array([0]*block_num)
+        self.priority_list = self.basicPriority_list.copy()
         self.parking_list = np.array([0]*block_num)
         self.distance_list = np.array([block_num]*block_num)
         self.accPrice_list = np.array([0]*block_num)
         self.nearestVehicleIdx_list = np.array([idx for idx in range(block_num)])
         self.parkingstarttime_list = np.array([0]*block_num)
         self.vehicleLabel_list = np.array([-1]*block_num)
-        
+        self.foreignPriority_list = np.array([-1]*block_num)
+
         # process
         self.update_price_list()
         self.update_mainBias()
@@ -79,10 +82,10 @@ class kernel:
         
         self.mark_parking_list(space_index, vehicle)
         self.updateLists(space_index, vehicle)
-        
         # self.broadcast_Pi_priorty()    
     
     def ParkVehicle(self,space_index, vehicle):
+        declareBroadcast = False
         if self.parkingVerification(space_index, vehicle):
             self.mark_parkingstarttime_list(space_index, vehicle)
             self.mark_parking_list(space_index, vehicle)
@@ -91,12 +94,14 @@ class kernel:
             self.show_parkInfo(space_index, vehicle)
         
             self.show_priceInfo() # check prices when update
+            declareBroadcast = True
+        return declareBroadcast
 
     def LeaveVehicle(self, space_index):
         # update income and refresh time first
         # then unmark parking info
         # finally update corresponding lists and variables
-        
+        declareBroadcast = False
         if self.leaveVerification(space_index):
             self.unmark_parkingleavetime_list(space_index)
             self.unmark_parking_list(space_index)
@@ -104,6 +109,8 @@ class kernel:
             self.updateLists(space_index)
 
             self.show_priceInfo() # check prices when update
+            declareBroadcast = True
+        return declareBroadcast
     
     def parkingVerification(self, space_idx, vehicle):
         legal = True
@@ -296,8 +303,9 @@ class kernel:
 
                 else: # reset to init value (space_num + 2)
                     self.priority_list[idx] = self.parkingPriority
+            self.priority_list += self.basicPriority_list.copy()
         else:
-            self.priority_list = np.array([0]*self.space_num)
+            self.priority_list = self.basicPriority_list.copy()
         self.update_mainPriority()
     
     def update_price_list(self):
@@ -307,21 +315,20 @@ class kernel:
         for idx in range(self.space_num):
             if self.parking_list[idx] == 0 : # vacancy
                 # update price
-                self.price_list[idx] = self.basePrice + self.priority_list[idx] + bias - self.mainPriority
+                self.price_list[idx]  = self.basePrice * (1 if self.mainBias==0 and self.priority_list[idx]==self.mainPriority else 2)
         
     #####################################################
     
-    def update_from_broadcast(self, foreignPriority):
+    def update_from_broadcast(self, board_idx, foreignPriority):
         declareBroadcast = False 
         # vehicle_num = sum(self.parking_list):
-        if self.mainPriority < self.foreignPriority :# or (self.foreignPriority==self.mainPriority and vehicle_num > self.foreign_vehicle_num):
+        self.foreignPriority_list[board_idx] = foreignPriority
+        if self.mainPriority < max(self.foreignPriority_list) :# or (self.foreignPriority==self.mainPriority and vehicle_num > self.foreign_vehicle_num):
             self.mainBias = 1
-            self.foreignPriority = foreignPriority
         else:
             self.mainBias = 0
-            if self.mainPriority > self.foreignPriority:
+            if self.mainPriority > max(self.foreignPriority_list):
                 declareBroadcast = True
-            self.foreignPriority = self.mainPriority
         
         self.update_price_list()
         return declareBroadcast
@@ -331,13 +338,20 @@ class kernel:
         return str(mainPriority)
 
     def update_mainBias(self):
-        if self.mainPriority < self.foreignPriority:
+        if self.mainPriority < max(self.foreignPriority_list):
             mainBias = 1
         else:
             mainBias = 0
 
+
+
     def update_mainPriority(self):
-        self.mainPriority = min(self.priority_list)
+        mainPriority = self.space_num +1
+        for idx in range(self.space_num):
+            if self.parking_list[idx]==0 and self.priority_list[idx]< mainPriority:
+                mainPriority = self.priority_list[idx]
+
+        self.mainPriority = mainPriority
         self.update_mainBias()
     
     def update_totalIncome(self, starttime, leavetime, price):

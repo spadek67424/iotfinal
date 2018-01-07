@@ -1,3 +1,11 @@
+## [Pricing stratgy and vehicle spaces control](#)
+> Jan 08, 2018
+1. change price startegy : 
+    - there's only two price following scooter parking space, 10 or 20, which depend on the priority. Only one or few parking space have 10 dollars price, other are set to 20 becuase of lower priority.
+    - If parking vehicle is car. Price is set to 40. (and 80 dollar when parking space is in the middle of the parking lot)
+2. add **car_parking_space_request** function to master.py : when 4 sides of car space are parked, the **master** with last parked space will send request to next **master** (with board_index). next **master** will merge scooter space to car one if there have enough parking space, or the **master** will pass the request to next **master** again.
+
+## [Link from raspberryPi to kernel, add some show function](#).
 > Jan 07, 2018
 
 1. add functions to **kernel.py** :

@@ -5,7 +5,7 @@ import paho.mqtt.client as mqtt
 import time
 
 # slave board index
-board_idx = 6
+board_idx = 
 
 client = mqtt.Client()
 client.connect("192.168.0.101")
