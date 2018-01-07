@@ -6,6 +6,12 @@
 	- _**show_parkInfo(space_idx, vehicle)**_ : print parking info. when parking request comes and accepted . (inside func:_**ParkVehicle**_)
 	- _**show_leaveInfo(space_idx, income)**_ : print leaving info. when vehicle leaves . (inside func:_**unmark_parkingleavetime_list**_)
 
+2. add **simulation.ipynb** to simulate whether algorithm is robust in multi-kernel (parking lots) situation
+
+3. rename **trygrove.py** as **master.py** or **slave.py**, depends on board task
+4. delete **udpdevice_mag_strip.py**, **turnallrgboff** and **WukongStandardLibrary.xml**, because we dont apply **[Wukong](http://iox.ntu.edu.tw/research/projectinfo/wukong)** at all.
+
+
 > Jan 06, 2018
 
 1. modify **udpdevice_mag_strip.py** :
