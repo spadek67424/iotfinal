@@ -5,7 +5,7 @@
     - If parking vehicle is car. Price is set to 40. (and 80 dollar when parking space is in the middle of the parking lot)
 2. add **car_parking_space_request** function to master.py : when 4 sides of car space are parked, the **master** with last parked space will send request to next **master** (with board_index). next **master** will merge scooter space to car one if there have enough parking space, or the **master** will pass the request to next **master** again.
 
-## [Link from raspberryPi to kernel, add some show function](#).
+## [Link from raspberryPi to kernel](#)
 > Jan 07, 2018
 
 1. add functions to **kernel.py** :
@@ -19,7 +19,7 @@
 3. rename **trygrove.py** as **master.py** or **slave.py**, depends on board task
 4. delete **udpdevice_mag_strip.py**, **turnallrgboff** and **WukongStandardLibrary.xml**, because we dont apply **[Wukong](http://iox.ntu.edu.tw/research/projectinfo/wukong)** at all.
 
-
+## [Add multiple List for info storage](#).
 > Jan 06, 2018
 
 1. modify **udpdevice_mag_strip.py** :
@@ -40,6 +40,7 @@
 5. create kernel directory and move **kernel.py** into it
 6. create **simulation.ipnb** for large parking spaces simulation
 
+## [Create kernel.py](#)
 > Jan 05, 2018
 
 1. add **kernel.py** : parking algorithm class
