@@ -311,15 +311,24 @@ class kernel:
         
     #####################################################
     
-    def update_from_broadcast(self, foreignPriority, foreign_vehicle_num): 
+    def update_from_broadcast(self, foreignPriority):
+        declareBroadcast = False 
         # vehicle_num = sum(self.parking_list):
         if self.mainPriority < self.foreignPriority :# or (self.foreignPriority==self.mainPriority and vehicle_num > self.foreign_vehicle_num):
             self.mainBias = 1
             self.foreignPriority = foreignPriority
         else:
             self.mainBias = 0
+            if self.mainPriority > self.foreignPriority:
+                declareBroadcast = True
             self.foreignPriority = self.mainPriority
+        
         self.update_price_list()
+        return declareBroadcast
+
+    def get_broadcast_info(self):
+        mainPriority = self.mainPriority
+        return str(mainPriority)
 
     def update_mainBias(self):
         if self.mainPriority < self.foreignPriority:

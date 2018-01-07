@@ -15,17 +15,25 @@ def on_connect(client, userData, flags, rc):
 
 def on_message(client, userData, msg):
     # print("Receive from slave, index is {}".format(msg.payload))
+    info = msg.payload
+    info_list = info.split("|")
+
     if msg.topic == "slave2master/":
         # TODO Update price when receive index from slave
-        info = msg.payload
-        info_list = info.split("|")
         if info_list[0]==str(board_idx-1):
             print("recieve from slave device, index is "+str(info_list[0]))
-            print(info_list[1])
             slaveParkVehicle(info_list[1])
             time.sleep(0.05)
     else:
         # TODO Update price when receive information from broadcast
+        print("receive broadcast, index is "+str(info_list[0]))
+        foreignPriority = int(info_list[1])
+        declareBroadcast = Kernel.update_from_broadcast(foreignPriority)
+        # check if best_priority broadcast is require or not
+        if declareBroadcast:
+            declareMsg = str(board)+'|'+ Kernel.get_broadcast_info()
+            client.publish("broadcast/", declareMsg)
+
         pass
 
 
