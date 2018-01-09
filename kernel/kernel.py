@@ -38,8 +38,11 @@ class kernel:
         self.parkingstarttime_list = np.array([0]*block_num)
         self.vehicleLabel_list = np.array([-1]*block_num)
         self.foreignPriority_list = np.array([-1]*block_num)
+        self.vehicleclasslist = np.array([e//4 for e in range(8)]) # [0,0,0,0,1,1,1,1] 0:scooter, 1:car
+
 
         # process
+        self.update_mainPriority()
         self.update_price_list()
         self.update_mainBias()
         
@@ -93,7 +96,7 @@ class kernel:
             self.updateLists(space_index)
             self.show_parkInfo(space_index, vehicle)
         
-            self.show_priceInfo() # check prices when update
+            # self.show_priceInfo() # check prices when update
             declareBroadcast = True
         return declareBroadcast
 
@@ -101,6 +104,7 @@ class kernel:
         # update income and refresh time first
         # then unmark parking info
         # finally update corresponding lists and variables
+
         declareBroadcast = False
         if self.leaveVerification(space_index):
             self.unmark_parkingleavetime_list(space_index)
@@ -108,7 +112,7 @@ class kernel:
             self.unmark_vehicleLabel_list(space_index)
             self.updateLists(space_index)
 
-            self.show_priceInfo() # check prices when update
+            # self.show_priceInfo() # check prices when update
             declareBroadcast = True
         return declareBroadcast
     
@@ -190,6 +194,7 @@ class kernel:
         price = self.price_list[space_idx]
         vehicle = self.vehicleLabel_list[space_idx]
         
+        price = self.customized_carPrice(space_idx, price, vehicle)
         # get income updated
         income = self.update_totalIncome(starttime, leavetime, price)
         self.show_leaveInfo(space_idx, income)
@@ -200,6 +205,16 @@ class kernel:
         else:
             self.parkingstarttime_list[space_idx] = 0
     
+    def customized_carPrice(self, space_idx, price, vehicle):
+        tmpPrice = price
+        if vehicle==1:
+            tmpPrice = self.carPrice
+            if space_idx!=0 and (space_idx+self.carspaceNum)!=self.space_num: # attch parking lot edge
+                tmpPrice *=2
+        price = tmpPrice
+        
+        return price
+
 
     ################# update func. #######################
     def update_distance_list(self):
@@ -316,7 +331,7 @@ class kernel:
             if self.parking_list[idx] == 0 : # vacancy
                 # update price
                 self.price_list[idx]  = self.basePrice * (1 if self.mainBias==0 and self.priority_list[idx]==self.mainPriority else 2)
-        
+                
     #####################################################
     
     def update_from_broadcast(self, board_idx, foreignPriority):
@@ -339,16 +354,18 @@ class kernel:
 
     def update_mainBias(self):
         if self.mainPriority < max(self.foreignPriority_list):
-            mainBias = 1
+            self.mainBias = 1
         else:
-            mainBias = 0
+            self.mainBias = 0
+        # print('mainBias:'+str(self.mainBias)+" | mainPriority: "+str(self.mainPriority))
 
 
 
     def update_mainPriority(self):
-        mainPriority = self.space_num +1
+        mainPriority = self.space_num +1+4
         for idx in range(self.space_num):
-            if self.parking_list[idx]==0 and self.priority_list[idx]< mainPriority:
+            if self.parking_list[idx]==0 and self.priority_list[idx]< mainPriority and self.vehicleclasslist[idx]==0:
+                # print('mainPriority: ' + str(mainPriority))
                 mainPriority = self.priority_list[idx]
 
         self.mainPriority = mainPriority
@@ -376,6 +393,8 @@ class kernel:
         print(self.vehicleLabel_list)
         print("parkingstarttime list")
         print([int(time.time()-t) if t>0 else 0 for t in self.parkingstarttime_list])
+        print("vehicleclass list")
+        print(self.vehicleclasslist)
     
     def showStatus(self):
         print("mainPriority")
@@ -395,6 +414,6 @@ class kernel:
     def show_leaveInfo(self, space_idx, income):
         vehicle = self.vehicleLabel_list[space_idx] # get vehicle class
         vehicle = 'car' if vehicle else 'scooter'
-        print('[leave vehicle] class: '+vehicle+' | idx: '+str(space_idx)+' | earned: '+str(income))
+        print('[leave vehicle] class: '+vehicle+' | idx: '+str(space_idx)+' | earned: $'+str(income)+ ' | totalIncome: $'+str(self.totalIncome) )
 
 
