@@ -4,18 +4,37 @@ from udpwkpf_io_interface import *
 from twisted.internet import reactor
 from raspledstrip.ledstrip import *
 import time
+from Kernel import kernel
 
 Magnetic_Pin_1 = 2
 Magnetic_Pin_2 = 3
 Magnetic_Pin_3 = 4
 Magnetic_Pin_4 = 5
 
+stirp_num = 4
+
 if __name__ == "__main__":
+    Kernel = kernel(block_num = strip_num)
+    strip_status_list = [False] * 4
+    def updateKernel(pID, val):
+        # event trigger
+        if strip_status_list[pID] != val:
+            if val:
+                Kernel.ParkVehicle(pID, 0) # scooter
+                
+            else:
+                Kernel.LeaveVehicle(pID, 0) # scooter
+            strip_status_list[pID] = val
+            Kernel.showLists()
+            time.sleep(0.05)
+
     class Magnetic_Sensor(WuClass):
+
         def __init__(self, pin):
             WuClass.__init__(self)
             self.loadClass('magnetic')
             self.magnetic_gpio = pin_mode(pin, PIN_TYPE_DIGITAL, PIN_MODE_INPUT)
+            
             print "Megnetic Sensor init success"
 
         def update(self,obj,pID=None,val=None):
@@ -23,7 +42,9 @@ if __name__ == "__main__":
                 on_off = digital_read(self.magnetic_gpio)
                 obj.setProperty(0, on_off)
 
-                print "Magnetic sensor value: ", on_off
+                # print "Magnetic sensor value: ", on_off
+                updateKernel(pID, val)
+
             except IOError:
                 print ("Error")
 
